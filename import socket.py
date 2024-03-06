@@ -9,7 +9,7 @@ def handle_client(connection, client_address):
         print('Received:', data)
 
         # Echo back the received data
-        response = data
+        response = 'go'
         connection.sendall(response.encode())
 
     finally:
