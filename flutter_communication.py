@@ -1,7 +1,5 @@
 import socket
 import threading
-import math
-import time
 
 last_received_message = ""
 
@@ -41,9 +39,9 @@ client_connections = []
 # Function to start the server
 def start_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_address = ('192.168.123.35', 704)
+    server_address = ('172.16.0.203', 704)
     server_socket.bind(server_address)
-    server_socket.listen(15) 
+    server_socket.listen(5) 
     print('ESPA-X server is listening on', server_address)
 
     while True:

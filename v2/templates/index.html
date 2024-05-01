@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Response Display</title>
+    <title>Alert Message</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,54 +11,102 @@
             margin: 0;
             padding: 0;
         }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+            z-index: 1000;
+            display: none;
+        }
+        .alert-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
             padding: 20px;
-        }
-        #response_display {
-            margin-top: 20px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            background-color: #fff;
-            border-radius: 5px;
-        }
-        #get_response {
-            background-color: #007bff;
+            background-color: #ff4d4d; /* Red color for alert */
             color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            text-align: center;
+            animation: alertAnimation 1s ease-in-out infinite alternate;
+            display: none;
+        }
+        .alert-modal h2 {
+            margin-bottom: 10px;
+        }
+        .alert-modal button {
+            background-color: #fff;
+            color: #ff4d4d;
             border: none;
             padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
             border-radius: 5px;
+            margin-top: 20px;
+        }
+        @keyframes alertAnimation {
+            from {
+                transform: scale(1);
+            }
+            to {
+                transform: scale(1.1);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Response Display</h1>
-        <div id="response_display">
-            <!-- Response from the server will be displayed here -->
-        </div>
-        <button id="get_response">Get Response</button>
+    <div class="overlay" id="overlay"></div>
+    <div class="alert-modal" id="alertModal">
+        <h2>Emergency Alert ! </h2>
+        <div id="alertMessage"></div>
+        <button onclick="dismissAlert()">Yes send the Request ! </button>
     </div>
 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.3/socket.io.min.js"></script>
     <script>
-        $(document).ready(function(){
-            $('#get_response').click(function(){
-                $.ajax({
-                    type: "POST",
-                    url: "/send_request",
-                    success: function(response){
-                        $('#response_display').text(response);
-                    },
-                    error: function(xhr, status, error){
-                        console.error(xhr.responseText);
-                    }
-                });
-            });
+        // Connect to the WebSocket server
+        var socket = io();
+
+        // Handle message update event
+        socket.on('message_update', function(data) {
+            var message = data.message;
+            if (isXML(message)) {
+                var parser = new DOMParser();
+                var xmlDoc = parser.parseFromString(message, 'text/xml');
+                var extractedMessage = xmlDoc.documentElement.textContent;
+                showAlert(extractedMessage);
+            } else {
+                console.error("Received non-XML data:", message);
+            }
         });
+
+        function isXML(data) {
+            // Check if the data starts with "<?xml", indicating XML format
+            return data.trim().startsWith("<?xml");
+        }
+
+        function showAlert(message) {
+            var overlay = document.getElementById('overlay');
+            var alertModal = document.getElementById('alertModal');
+            var alertMessage = document.getElementById('alertMessage');
+            overlay.style.display = 'block';
+            alertModal.style.display = 'block';
+            alertMessage.innerText = message;
+        }
+
+        function dismissAlert() {
+            var overlay = document.getElementById('overlay');
+            var alertModal = document.getElementById('alertModal');
+            overlay.style.display = 'none';
+            alertModal.style.display = 'none';
+            window.location.href = '/liftcall';
+        }
     </script>
 </body>
 </html>
